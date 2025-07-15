@@ -80,6 +80,7 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           { type: 'tv_stand', x: 35, y: 15, width: 30, height: 8 },
           { type: 'coffee_table', x: 40, y: 50, width: 20, height: 10 },
           { type: 'window', x: 70, y: 10, width: 20, height: 3 },
+          { type: 'door', x: 2, y: 45, width: 6, height: 10 },
         ],
         zones: {
           light: [
@@ -94,7 +95,7 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           switch: [{ x: 10, y: 30, label: '开关' }, { x: 10, y: 70, label: '开关' }],
           sensor: [{ x: 20, y: 25, label: '传感器' }, { x: 80, y: 85, label: '传感器' }],
           camera: [{ x: 15, y: 15, label: '摄像头' }],
-          door: [{ x: 5, y: 50, label: '门' }]
+          door: [{ x: 2, y: 50, label: '门' }]
         }
       },
       bedroom: {
@@ -110,6 +111,7 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           { type: 'wardrobe', x: 70, y: 20, width: 15, height: 40 },
           { type: 'desk', x: 15, y: 70, width: 25, height: 10 },
           { type: 'window', x: 65, y: 15, width: 20, height: 3 },
+          { type: 'door', x: 7, y: 45, width: 6, height: 10 },
         ],
         zones: {
           light: [{ x: 50, y: 25, label: '主灯' }, { x: 20, y: 65, label: '床头灯' }, { x: 80, y: 65, label: '台灯' }],
@@ -118,7 +120,7 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           switch: [{ x: 15, y: 30, label: '开关' }],
           sensor: [{ x: 25, y: 30, label: '传感器' }],
           camera: [{ x: 20, y: 20, label: '摄像头' }],
-          door: [{ x: 10, y: 50, label: '门' }]
+          door: [{ x: 7, y: 50, label: '门' }]
         }
       },
       kitchen: {
@@ -134,13 +136,14 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           { type: 'sink', x: 35, y: 25, width: 15, height: 10 },
           { type: 'stove', x: 55, y: 25, width: 15, height: 10 },
           { type: 'fridge', x: 75, y: 40, width: 8, height: 15 },
+          { type: 'door', x: 12, y: 45, width: 6, height: 10 },
         ],
         zones: {
           light: [{ x: 30, y: 30, label: '主灯' }, { x: 70, y: 30, label: '辅灯' }],
           switch: [{ x: 20, y: 35, label: '开关' }],
           sensor: [{ x: 50, y: 35, label: '烟雾传感器' }, { x: 75, y: 65, label: '温度传感器' }],
           camera: [{ x: 80, y: 25, label: '摄像头' }],
-          door: [{ x: 15, y: 50, label: '门' }]
+          door: [{ x: 12, y: 50, label: '门' }]
         }
       },
       bathroom: {
@@ -155,12 +158,13 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
           { type: 'toilet', x: 25, y: 45, width: 12, height: 15 },
           { type: 'sink', x: 50, y: 30, width: 15, height: 10 },
           { type: 'shower', x: 65, y: 45, width: 12, height: 15 },
+          { type: 'door', x: 17, y: 45, width: 6, height: 10 },
         ],
         zones: {
           light: [{ x: 50, y: 35, label: '主灯' }],
           switch: [{ x: 25, y: 30, label: '开关' }],
           sensor: [{ x: 40, y: 65, label: '湿度传感器' }],
-          door: [{ x: 20, y: 50, label: '门' }]
+          door: [{ x: 17, y: 50, label: '门' }]
         }
       },
       balcony: {
@@ -174,13 +178,14 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
         furniture: [
           { type: 'railing', x: 70, y: 35, width: 3, height: 30 },
           { type: 'plant_stand', x: 40, y: 45, width: 8, height: 8 },
+          { type: 'door', x: 22, y: 45, width: 6, height: 10 },
         ],
         zones: {
           light: [{ x: 50, y: 40, label: '主灯' }],
           curtain: [{ x: 70, y: 50, label: '窗帘' }],
           switch: [{ x: 30, y: 35, label: '开关' }],
           sensor: [{ x: 45, y: 60, label: '传感器' }],
-          door: [{ x: 25, y: 50, label: '门' }]
+          door: [{ x: 22, y: 50, label: '门' }]
         }
       }
     }
@@ -239,7 +244,8 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
       fridge: '/furniture/fridge.svg',
       window: '/furniture/window.svg',
       railing: '/furniture/railing.svg',
-      plant_stand: '/furniture/plant_stand.svg'
+      plant_stand: '/furniture/plant_stand.svg',
+      door: '/furniture/door.svg'
     }
     
     const iconPath = furnitureIcons[furniture.type]
@@ -275,7 +281,8 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
       fridge: '#F3F4F6',
       window: '#60A5FA',
       railing: '#6B7280',
-      plant_stand: '#10B981'
+      plant_stand: '#10B981',
+      door: '#8B4513'
     }
     
     return (
@@ -326,9 +333,10 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
         {/* 房间名称 */}
         <text
           x="50%"
-          y="8%"
+          y="6%"
           textAnchor="middle"
           className="fill-gray-700 text-lg font-bold"
+          style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8)' }}
         >
           {config.name}
         </text>

@@ -61,11 +61,10 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
     controlMotionSensors()
   }, [selectedRoom, devices, toggleDevice])
 
-<<<<<<< HEAD
   // 切换房间时调用AI分析接口并弹出气泡
   useEffect(() => {
     if (selectedRoom) {
-      fetch("http://localhost:8000/api/agent/analyze", {
+      fetch(`http://localhost:3002/api/agent/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ room: selectedRoom }),
