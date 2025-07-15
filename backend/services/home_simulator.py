@@ -35,7 +35,7 @@ class HomeSimulator:
                 "name": "卧室人体感应器",
                 "room": Room.BEDROOM,
                 "sensor_type": SensorType.MOTION,
-                "value": 0,  # 0=无人, 1=有人
+                "value": 0,
                 "unit": "boolean"
             },
             {
@@ -134,57 +134,8 @@ class HomeSimulator:
     async def _simulation_loop(self):
         """模拟循环"""
         while self.is_running:
-            try:
-                # 模拟传感器数据变化
-                await self._simulate_sensor_changes()
-                
-                # 保存当前状态
-                await self._save_current_state()
-                
-                # 等待10秒
-                await asyncio.sleep(10)
-                
-            except Exception as e:
-                print(f"❌ 模拟循环错误: {e}")
-                await asyncio.sleep(5)
-    
-    async def _simulate_sensor_changes(self):
-        """模拟传感器数据变化"""
-        current_time = datetime.now()
-        
-        for device in self.devices.values():
-            if isinstance(device, SensorDevice) and device.sensor_type == SensorType.MOTION:
-                # 随机模拟人员移动
-                if random.random() < 0.3:  # 30%概率发生变化
-                    old_value = device.value
-                    device.value = 1 if random.random() < 0.4 else 0  # 40%概率有人
-                    
-                    if device.value == 1 and old_value == 0:
-                        # 刚检测到人
-                        device.detection_duration = 0
-                    elif device.value == 1:
-                        # 持续检测到人
-                        device.detection_duration += 10
-                    else:
-                        # 无人
-                        device.detection_duration = 0
-                    
-                    device.last_updated = current_time
-                    db.save_device(device)
-                
-                elif device.value == 1:
-                    # 继续检测到人，增加持续时间
-                    device.detection_duration += 10
-                    device.last_updated = current_time
-                    db.save_device(device)
-            
-            elif isinstance(device, SensorDevice) and device.sensor_type == SensorType.TEMPERATURE:
-                # 温度小幅波动
-                if random.random() < 0.2:  # 20%概率变化
-                    device.value += random.uniform(-0.5, 0.5)
-                    device.value = round(device.value, 1)
-                    device.last_updated = current_time
-                    db.save_device(device)
+            pass
+            await asyncio.sleep(10)
     
     async def _save_current_state(self):
         """保存当前家居状态"""
