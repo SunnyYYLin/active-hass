@@ -1,0 +1,12 @@
+<svg width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- 衣柜主体 -->
+  <rect x="5" y="5" width="30" height="90" rx="3" fill="#7C3AED" stroke="#5B21B6" stroke-width="2"/>
+  <!-- 门缝 -->
+  <line x1="20" y1="8" x2="20" y2="92" stroke="#5B21B6" stroke-width="2"/>
+  <!-- 门把手 -->
+  <circle cx="15" cy="50" r="2" fill="#374151"/>
+  <circle cx="25" cy="50" r="2" fill="#374151"/>
+  <!-- 装饰线 -->
+  <rect x="8" y="8" width="24" height="4" fill="#8B5CF6"/>
+  <rect x="8" y="88" width="24" height="4" fill="#8B5CF6"/>
+</svg>

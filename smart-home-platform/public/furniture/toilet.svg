@@ -1,0 +1,10 @@
+<svg width="30" height="35" viewBox="0 0 30 35" xmlns="http://www.w3.org/2000/svg">
+  <!-- 马桶座 -->
+  <ellipse cx="15" cy="18" rx="12" ry="8" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="2"/>
+  <!-- 马桶盖 -->
+  <ellipse cx="15" cy="15" rx="10" ry="6" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <!-- 水箱 -->
+  <rect x="8" y="5" width="14" height="12" rx="3" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="2"/>
+  <!-- 冲水按钮 -->
+  <circle cx="15" cy="11" r="2" fill="#9CA3AF"/>
+</svg>

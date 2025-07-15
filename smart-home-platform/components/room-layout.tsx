@@ -224,6 +224,42 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
   }
 
   const renderFurniture = (furniture: any) => {
+    const furnitureIcons: { [key: string]: string } = {
+      sofa: '/furniture/sofa.svg',
+      bed: '/furniture/bed.svg',
+      tv_stand: '/furniture/tv_stand.svg',
+      coffee_table: '/furniture/coffee_table.svg',
+      counter: '/furniture/counter.svg',
+      desk: '/furniture/desk.svg',
+      wardrobe: '/furniture/wardrobe.svg',
+      toilet: '/furniture/toilet.svg',
+      sink: '/furniture/sink.svg',
+      shower: '/furniture/shower.svg',
+      stove: '/furniture/stove.svg',
+      fridge: '/furniture/fridge.svg',
+      window: '/furniture/window.svg',
+      railing: '/furniture/railing.svg',
+      plant_stand: '/furniture/plant_stand.svg'
+    }
+    
+    const iconPath = furnitureIcons[furniture.type]
+    
+    if (iconPath) {
+      return (
+        <image
+          key={`${furniture.type}-${furniture.x}-${furniture.y}`}
+          x={`${furniture.x}%`}
+          y={`${furniture.y}%`}
+          width={`${furniture.width}%`}
+          height={`${furniture.height}%`}
+          href={iconPath}
+          opacity="0.9"
+          filter="url(#drop-shadow)"
+        />
+      )
+    }
+    
+    // 如果没有对应的图标，回退到原来的方块显示
     const furnitureColors: { [key: string]: string } = {
       sofa: '#8B5CF6',
       bed: '#EC4899',
@@ -260,6 +296,16 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
     <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden">
       {/* SVG 背景层 - 墙壁和家具 */}
       <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
+        {/* 定义滤镜效果 */}
+        <defs>
+          <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.3)"/>
+          </filter>
+          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#E5E7EB" strokeWidth="0.5" opacity="0.3"/>
+          </pattern>
+        </defs>
+        
         {/* 房间墙壁 */}
         {config.walls.map((wall, index) => (
           <line
@@ -288,11 +334,6 @@ export function RoomLayout({ room, devices, selectedDevice, onDeviceClick, updat
         </text>
         
         {/* 网格线（可选，用于调试） */}
-        <defs>
-          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#E5E7EB" strokeWidth="0.5" opacity="0.3"/>
-          </pattern>
-        </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
 

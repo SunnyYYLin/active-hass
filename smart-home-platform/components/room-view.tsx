@@ -61,6 +61,7 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
     controlMotionSensors()
   }, [selectedRoom, devices, toggleDevice])
 
+<<<<<<< HEAD
   // 切换房间时调用AI分析接口并弹出气泡
   useEffect(() => {
     if (selectedRoom) {
@@ -90,6 +91,17 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
         })
     }
   }, [selectedRoom])
+=======
+  // 同步选中设备的状态
+  useEffect(() => {
+    if (selectedDevice) {
+      const updatedDevice = devices.find(d => d.id === selectedDevice.id)
+      if (updatedDevice && updatedDevice !== selectedDevice) {
+        setSelectedDevice(updatedDevice)
+      }
+    }
+  }, [devices, selectedDevice])
+>>>>>>> 0d5ecf8009c097cf9677f8be776861bca2e3da97
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
@@ -160,14 +172,11 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
     
     try {
       setUpdating(deviceId)
-      await toggleDevice(deviceId)
+      const response = await toggleDevice(deviceId)
       
-      // 更新选中的设备信息
-      if (selectedDevice && selectedDevice.id === deviceId) {
-        const updatedDevice = devices.find(d => d.id === deviceId)
-        if (updatedDevice) {
-          setSelectedDevice(updatedDevice)
-        }
+      // 立即更新选中的设备信息，使用API返回的最新设备状态
+      if (selectedDevice && selectedDevice.id === deviceId && response.device) {
+        setSelectedDevice(response.device)
       }
     } catch (error) {
       console.error('切换设备状态失败:', error)
@@ -182,16 +191,13 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
     try {
       setUpdating(deviceId)
       const currentDevice = devices.find(d => d.id === deviceId)
-      await updateDevice(deviceId, {
+      const response = await updateDevice(deviceId, {
         properties: { ...currentDevice?.properties, [property]: value }
       })
       
-      // 更新选中的设备信息
-      if (selectedDevice && selectedDevice.id === deviceId) {
-        const updatedDevice = devices.find(d => d.id === deviceId)
-        if (updatedDevice) {
-          setSelectedDevice(updatedDevice)
-        }
+      // 立即更新选中的设备信息，使用API返回的最新设备状态
+      if (selectedDevice && selectedDevice.id === deviceId && response.device) {
+        setSelectedDevice(response.device)
       }
     } catch (error) {
       console.error('更新设备属性失败:', error)
