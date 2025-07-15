@@ -151,8 +151,8 @@ class AgentService:
             print(f"🔍 分析家居状态: {state_description}")
             
             # 构建提示词
-            system_prompt = self._build_system_prompt()
-            user_prompt = self._build_user_prompt(state_description)
+            system_prompt = self._build_analysis_system_prompt()
+            user_prompt = self._build_analysis_user_prompt(state_description)
             
             # 调用LLM API
             response = await self._call_llm_api(system_prompt, user_prompt)
@@ -169,13 +169,33 @@ class AgentService:
             print(f"❌ AI建议生成失败: {e}")
             return None
     
-    async def _call_llm_api(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    async def _call_llm_api(self, system_prompt: str, user_prompt: str, with_history: bool = False) -> Optional[str]:
         """调用LLM API"""
         try:
             if not self.llm_client:
                 return None
             
             import asyncio
+            
+            # 构建消息列表
+            if with_history:
+                # 包含历史消息
+                messages = [{"role": "system", "content": system_prompt}]
+                
+                # 添加最近的历史消息（限制数量以避免超过token限制）
+                recent_messages = self.context.messages[-6:]  # 最近6条消息
+                for msg in recent_messages:
+                    role = "user" if msg.role == MessageRole.USER else "assistant"
+                    messages.append({"role": role, "content": msg.content})
+                
+                # 添加当前用户消息
+                messages.append({"role": "user", "content": user_prompt})
+            else:
+                # 不包含历史消息，只有系统提示和用户消息
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ]
             
             # 使用异步方式调用
             def sync_call():
@@ -187,10 +207,7 @@ class AgentService:
                 
                 return self.llm_client.chat.completions.create(
                     model=self.config.model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
+                    messages=messages,
                     temperature=0.7,
                     max_tokens=300,
                     timeout=10,  # 10秒超时
@@ -209,59 +226,60 @@ class AgentService:
             
         except Exception as e:
             print(f"❌ LLM API调用失败: {e}")
-            return None
-    
+            return None    
+        
     def _build_detailed_state_description(self, home_state: HomeState) -> str:
         """构建详细的状态描述"""
-        # descriptions = []
+        # TODO
+        descriptions = []
         
-        # # 房间占用状态
-        # for room, occupied in home_state.room_occupancy.items():
-        #     room_name = self._translate_room_name(room)
-        #     if occupied:
-        #         # 查找停留时间
-        #         duration = 0
-        #         for device in home_state.devices:
-        #             if (device.room == room and 
-        #                 hasattr(device, 'sensor_type') and 
-        #                 device.sensor_type == "motion" and
-        #                 hasattr(device, 'detection_duration')):
-        #                 duration = device.detection_duration
-        #                 break
+        # 房间占用状态
+        for room, occupied in home_state.room_occupancy.items():
+            room_name = self._translate_room_name(room)
+            if occupied:
+                # 查找停留时间
+                duration = 0
+                for device in home_state.devices:
+                    if (device.room == room and 
+                        hasattr(device, 'sensor_type') and 
+                        device.sensor_type == "motion" and
+                        hasattr(device, 'detection_duration')):
+                        duration = device.detection_duration
+                        break
                 
-        #         if duration > 60:
-        #             descriptions.append(f"{room_name}有人已停留{duration//60}分钟")
-        #         else:
-        #             descriptions.append(f"{room_name}有人")
-        #     else:
-        #         descriptions.append(f"{room_name}无人")
+                if duration > 60:
+                    descriptions.append(f"{room_name}有人已停留{duration//60}分钟")
+                else:
+                    descriptions.append(f"{room_name}有人")
+            else:
+                descriptions.append(f"{room_name}无人")
         
-        # # 设备状态
-        # device_states = []
-        # for device in home_state.devices:
-        #     if device.type == "light":
-        #         room_name = self._translate_room_name(device.room)
-        #         status = "开启" if device.status == "on" else "关闭"
-        #         device_states.append(f"{room_name}{device.name}{status}")
-        #     elif device.type == "air_conditioner" and device.status == "on":
-        #         room_name = self._translate_room_name(device.room)
-        #         temp = getattr(device, 'temperature', 26)
-        #         device_states.append(f"{room_name}空调开启，设定{temp}°C")
+        # 设备状态
+        device_states = []
+        for device in home_state.devices:
+            if device.type == "light":
+                room_name = self._translate_room_name(device.room)
+                status = "开启" if device.status == "on" else "关闭"
+                device_states.append(f"{room_name}{device.name}{status}")
+            elif device.type == "air_conditioner" and device.status == "on":
+                room_name = self._translate_room_name(device.room)
+                temp = getattr(device, 'temperature', 26)
+                device_states.append(f"{room_name}空调开启，设定{temp}°C")
         
-        # # 组合描述
-        # state_desc = "；".join(descriptions)
-        # if device_states:
-        #     state_desc += "。设备状态：" + "；".join(device_states)
+        # 组合描述
+        state_desc = "；".join(descriptions)
+        if device_states:
+            state_desc += "。设备状态：" + "；".join(device_states)
         
-        # return state_desc
+        return state_desc
         
-        return home_state.dict()
+        # return home_state.dict()
     
-    def _build_system_prompt(self) -> str:
+    def _build_analysis_system_prompt(self) -> str:
         """构建优化的系统提示词"""
         return SYSTEM_PROMPT
     
-    def _build_user_prompt(self, state_description: str) -> str:
+    def _build_analysis_user_prompt(self, state_description: str) -> str:
         """构建优化的用户提示词"""
         prompt = f"当前家居状态：{state_description}\n\n"
         prompt += "请分析这个状态，如果发现需要用户关注的问题，给出一个简洁友好的建议。如果一切正常，回复'当前状态良好'。"
@@ -305,7 +323,7 @@ class AgentService:
         
         # 处理用户回复
         response_content = await self._process_user_response(interaction.message)
-        actions_taken = await self._parse_ai_response_v2(response_content)
+        actions_taken = []  # 暂时设为空列表，后续可以根据响应内容解析具体操作
         
         # 保存助手回复
         agent_message = AgentMessage(
@@ -332,17 +350,11 @@ class AgentService:
                 print("❌ LLM客户端不可用，无法处理用户响应")
                 return "抱歉，我暂时无法处理您的请求。"
             
-            # 构建系统提示
-            system_prompt = """你是一个智能家居助手，负责回应用户的消息。请根据用户的回复给出简洁友好的响应。
-如果用户同意建议，回复确认信息。
-如果用户拒绝建议，表示理解并记住偏好。
-保持回复简洁友好。"""
-            
-            # 构建用户提示
+            # 构建历史消息和当前用户消息
             user_prompt = f"用户说：{message}\n\n请给出合适的回复："
             
-            # 调用LLM API
-            response = await self._call_llm_api(system_prompt, user_prompt)
+            # 调用改进的LLM API（包含历史消息）
+            response = await self._call_llm_api(SYSTEM_PROMPT, user_prompt, with_history=True)
             
             if response:
                 return response

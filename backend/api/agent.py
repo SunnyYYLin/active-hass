@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from typing import List, Optional
 from models.agent import (
     AgentSuggestion, UserInteraction, AgentResponse, 
@@ -21,13 +21,20 @@ async def get_home_simulator() -> HomeSimulator:
 
 @router.post("/interact", response_model=AgentResponse)
 async def interact_with_agent(
-    interaction: UserInteraction,
     background_tasks: BackgroundTasks,
     agent: AgentService = Depends(get_agent_service),
-    home_sim: HomeSimulator = Depends(get_home_simulator)
+    home_sim: HomeSimulator = Depends(get_home_simulator),
+    interaction: UserInteraction = None,
+    message: str = Query(None, description="消息内容（可选，用于查询参数方式）")
 ):
-    """处理人对AI的回复"""
+    """处理人对AI的回复 - 支持JSON请求体或查询参数"""
     try:
+        # 优先使用请求体中的数据，如果没有则使用查询参数
+        if interaction is None:
+            if message is None:
+                raise HTTPException(status_code=422, detail="需要提供message参数或UserInteraction对象")
+            interaction = UserInteraction(message=message)
+        
         # 处理用户交互
         response = await agent.handle_user_interaction(interaction)
         

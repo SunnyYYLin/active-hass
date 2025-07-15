@@ -35,7 +35,7 @@ class HomeSimulator:
                 "name": "卧室人体感应器",
                 "room": Room.BEDROOM,
                 "sensor_type": SensorType.MOTION,
-                "value": 0,
+                "value": 1,  # 模拟有人
                 "unit": "boolean"
             },
             {
@@ -43,7 +43,7 @@ class HomeSimulator:
                 "name": "客厅人体感应器",
                 "room": Room.LIVING_ROOM,
                 "sensor_type": SensorType.MOTION,
-                "value": 0,
+                "value": 0, # 模拟无人
                 "unit": "boolean"
             },
             {
