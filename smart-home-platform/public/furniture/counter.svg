@@ -1,0 +1,13 @@
+<svg width="80" height="25" viewBox="0 0 80 25" xmlns="http://www.w3.org/2000/svg">
+  <!-- 台面 -->
+  <rect x="5" y="8" width="70" height="12" rx="2" fill="#6B7280" stroke="#4B5563" stroke-width="2"/>
+  <!-- 储物空间 -->
+  <rect x="8" y="11" width="64" height="6" fill="#9CA3AF" stroke="#6B7280" stroke-width="1"/>
+  <!-- 抽屉把手 -->
+  <circle cx="15" cy="14" r="1.5" fill="#374151"/>
+  <circle cx="35" cy="14" r="1.5" fill="#374151"/>
+  <circle cx="55" cy="14" r="1.5" fill="#374151"/>
+  <!-- 支撑腿 -->
+  <rect x="10" y="18" width="3" height="5" fill="#374151"/>
+  <rect x="67" y="18" width="3" height="5" fill="#374151"/>
+</svg>

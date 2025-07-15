@@ -434,7 +434,7 @@ class AgentService:
             import os
             
             # 获取后端服务地址 - 直接使用localhost:8000，因为这是内部调用
-            base_url = "http://localhost:8000"
+            base_url = f"http://localhost:{os.getenv('PORT', 8000)}"
             
             async with httpx.AsyncClient() as client:
                 for device_id, device_config in actions.items():

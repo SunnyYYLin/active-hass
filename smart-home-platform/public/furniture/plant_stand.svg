@@ -1,0 +1,10 @@
+<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <!-- 花架底座 -->
+  <rect x="5" y="12" width="10" height="6" rx="2" fill="#10B981" stroke="#047857" stroke-width="1"/>
+  <!-- 花盆 -->
+  <path d="M 6 12 L 14 12 L 13 8 L 7 8 Z" fill="#92400E" stroke="#78350F" stroke-width="1"/>
+  <!-- 植物 -->
+  <path d="M 10 8 Q 8 6 9 4 Q 10 5 10 8" fill="#16A34A"/>
+  <path d="M 10 8 Q 12 6 11 4 Q 10 5 10 8" fill="#16A34A"/>
+  <path d="M 10 8 Q 9 3 10 2 Q 11 3 10 8" fill="#16A34A"/>
+</svg>

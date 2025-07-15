@@ -1,0 +1,8 @@
+<svg width="50" height="25" viewBox="0 0 50 25" xmlns="http://www.w3.org/2000/svg">
+  <!-- 桌面 -->
+  <ellipse cx="25" cy="12" rx="22" ry="10" fill="#92400E" stroke="#78350F" stroke-width="2"/>
+  <!-- 支撑柱 -->
+  <rect x="22" y="18" width="6" height="4" fill="#451A03"/>
+  <!-- 装饰线 -->
+  <ellipse cx="25" cy="12" rx="18" ry="8" fill="none" stroke="#A16207" stroke-width="1"/>
+</svg>
