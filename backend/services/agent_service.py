@@ -250,7 +250,7 @@ class AgentService:
                 extra_params = {}
                 if "qwen" in self.config.model.lower():
                     extra_params["stream"] = False
-                    extra_params["extra_body"] = {"enable_thinking": False}
+                    # extra_params["extra_body"] = {"enable_thinking": False}
                 
                 return self.llm_client.chat.completions.create(
                     model=self.config.model,
@@ -276,49 +276,16 @@ class AgentService:
             return None    
         
     def _build_detailed_state_description(self, home_state: HomeState) -> str:
-        """构建详细的状态描述"""
-        # TODO
-        descriptions = []
+        """构建详细的状态描述
         
-        # 房间占用状态
-        for room, occupied in home_state.room_occupancy.items():
-            room_name = self._translate_room_name(room)
-            if occupied:
-                # 查找停留时间
-                duration = 0
-                for device in home_state.devices:
-                    if (device.room == room and 
-                        hasattr(device, 'sensor_type') and 
-                        device.sensor_type == "motion" and
-                        hasattr(device, 'detection_duration')):
-                        duration = device.detection_duration
-                        break
-                
-                if duration > 60:
-                    descriptions.append(f"{room_name}有人已停留{duration//60}分钟")
-                else:
-                    descriptions.append(f"{room_name}有人")
-            else:
-                descriptions.append(f"{room_name}无人")
+        Args:
+            home_state: 家居状态对象
+            
+        Returns:
+            str: 详细的状态描述字符串
+        """
         
-        # 设备状态
-        device_states = []
-        for device in home_state.devices:
-            if device.type == "light":
-                room_name = self._translate_room_name(device.room)
-                status = "开启" if device.status == "on" else "关闭"
-                device_states.append(f"{room_name}{device.name}{status}")
-            elif device.type == "air_conditioner" and device.status == "on":
-                room_name = self._translate_room_name(device.room)
-                temp = getattr(device, 'temperature', 26)
-                device_states.append(f"{room_name}空调开启，设定{temp}°C")
-        
-        # 组合描述
-        state_desc = "；".join(descriptions)
-        if device_states:
-            state_desc += "。设备状态：" + "；".join(device_states)
-        
-        return state_desc
+        return str(home_state)
         
         # return home_state.dict()
     
