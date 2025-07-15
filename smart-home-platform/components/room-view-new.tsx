@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Lightbulb, Wind, Tv, Blinds, DoorOpen, Camera, ToggleLeft, Activity } from "lucide-react"
 import { Device, DeviceUpdateRequest } from "@/lib/api"
+import { RoomLayout } from "./room-layout"
 
 interface RoomViewProps {
   devices: Device[]
@@ -119,18 +120,6 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
     }
   }
 
-  // 模拟房间布局的设备位置
-  const getDevicePosition = (index: number, total: number) => {
-    const gridCols = Math.ceil(Math.sqrt(total))
-    const row = Math.floor(index / gridCols)
-    const col = index % gridCols
-    
-    return {
-      x: 15 + (col * 70) / gridCols,
-      y: 15 + (row * 70) / Math.ceil(total / gridCols),
-    }
-  }
-
   return (
     <div className="flex h-full">
       {/* 房间选择侧边栏 */}
@@ -163,50 +152,15 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
           </div>
 
           {/* 房间布局 */}
-          <Card className="h-96 relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
+          <Card className="h-96 relative overflow-hidden">
             <CardContent className="p-0 h-full">
-              <div className="relative w-full h-full">
-                {currentRoomDevices.map((device, index) => {
-                  const Icon = getDeviceIcon(device.type)
-                  const position = getDevicePosition(index, currentRoomDevices.length)
-                  const isSelected = selectedDevice?.id === device.id
-                  const isUpdating = updating === device.id
-                  
-                  return (
-                    <button
-                      key={device.id}
-                      className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
-                        isSelected 
-                          ? "ring-2 ring-blue-500 bg-blue-100" 
-                          : "hover:bg-white/80"
-                      } p-3 rounded-full transition-all duration-200 ${
-                        isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                      }`}
-                      style={{
-                        left: `${position.x}%`,
-                        top: `${position.y}%`,
-                      }}
-                      onClick={() => handleDeviceClick(device)}
-                      disabled={isUpdating}
-                    >
-                      <Icon 
-                        className={`w-6 h-6 ${getStatusColor(device.status)} ${
-                          isUpdating ? "animate-pulse" : ""
-                        }`} 
-                      />
-                      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap">
-                        {device.name}
-                      </div>
-                    </button>
-                  )
-                })}
-                
-                {currentRoomDevices.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-gray-500">该房间暂无设备</p>
-                  </div>
-                )}
-              </div>
+              <RoomLayout
+                room={selectedRoom}
+                devices={currentRoomDevices}
+                selectedDevice={selectedDevice}
+                onDeviceClick={handleDeviceClick}
+                updating={updating}
+              />
             </CardContent>
           </Card>
         </div>
