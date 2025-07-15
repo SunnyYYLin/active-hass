@@ -13,6 +13,27 @@ from models.devices import HomeState, SensorDevice, SensorType, Room
 from database.database import db
 from openai import OpenAI
 
+SYSTEM_PROMPT = """你是一个智能家居助手，负责分析家居状态并提供主动建议。
+
+你的职责：
+1. 分析当前家居设备状态和人员位置
+2. 识别可能的问题：能耗浪费、安全隐患、舒适度问题
+3. 以自然、友好的语气提供具体建议
+4. 建议要实用且容易执行
+
+回复要求：
+- 直接给出建议，不要多余的客套话
+- 使用"你"而不是"您"
+- 语气要自然亲切，像朋友一样
+- 一次只关注最重要的1-2个问题
+- 建议要具体明确
+
+示例风格：
+"你在卧室待了10分钟了，客厅的灯还开着，要不要关掉节省电费？"
+"厨房没人但灯还亮着，我帮你关掉吧？"
+"卧室温度有点高，要开空调吗？"
+"""
+
 class AgentService:
     """智能体服务"""
     
@@ -95,63 +116,51 @@ class AgentService:
         # 分析状态并生成建议
         suggestion = await self._generate_suggestion(home_state)
         
-        if suggestion and suggestion.confidence >= self.config.suggestion_threshold:
-            # 保存建议为消息
-            message = AgentMessage(
-                id=str(uuid.uuid4()),
-                role=MessageRole.AGENT,
-                content=suggestion.content,
-                timestamp=datetime.now(),
-                metadata={
-                    "suggestion_id": suggestion.id,
-                    "confidence": suggestion.confidence,
-                    "reasoning": suggestion.reasoning
-                }
-            )
+        # 保存建议为消息
+        message = AgentMessage(
+            id=str(uuid.uuid4()),
+            role=MessageRole.AGENT,
+            content=suggestion.content,
+            timestamp=datetime.now(),
+            metadata={
+                "suggestion_id": suggestion.id,
+                "reasoning": suggestion.reasoning
+            }
+        )
             
-            await self._add_message(message)
-            self.last_suggestion_time = datetime.now()
-            
-            return suggestion
+        await self._add_message(message)
+        self.last_suggestion_time = datetime.now()
         
-        return None
+        return suggestion
     
     def _should_generate_suggestion(self, home_state: HomeState) -> bool:
         """判断是否应该生成建议"""
-        # 如果不是主动模式，不生成建议
-        if not self.config.proactive_mode:
-            return False
-        
         # 如果最近刚生成过建议，避免过于频繁
         if (self.last_suggestion_time and 
-            datetime.now() - self.last_suggestion_time < timedelta(minutes=5)):
+            datetime.now() - self.last_suggestion_time < timedelta(seconds=10)):
             return False
         
         # 检查是否有值得关注的状态
         return True
     
     async def _generate_suggestion(self, home_state: HomeState) -> Optional[AgentSuggestion]:
-        """使用LLM生成智能建议（仅支持LLM）"""
+        """**主动**生成智能建议"""
         try:
-            # 分析当前状态
-            analysis = self._analyze_state_patterns(home_state)
-            
-            if not analysis:
-                return None
-            
             # 构建详细的状态描述
-            state_description = self._build_detailed_state_description(home_state, analysis)
+            state_description = self._build_detailed_state_description(home_state)
+            print(f"🔍 分析家居状态: {state_description}")
             
             # 构建提示词
-            system_prompt = self._build_system_prompt_v2()
-            user_prompt = self._build_user_prompt_v2(state_description, analysis)
+            system_prompt = self._build_system_prompt()
+            user_prompt = self._build_user_prompt(state_description)
             
             # 调用LLM API
             response = await self._call_llm_api(system_prompt, user_prompt)
+            print(response)
             
             if response:
                 # 解析AI响应
-                return self._parse_ai_response_v2(response, analysis)
+                return self._parse_ai_response(response)
             else:
                 print("❌ LLM调用失败，无可用的建议生成方式")
                 return None
@@ -204,129 +213,68 @@ class AgentService:
     
     def _build_detailed_state_description(self, home_state: HomeState) -> str:
         """构建详细的状态描述"""
-        descriptions = []
+        # descriptions = []
         
-        # 房间占用状态
-        for room, occupied in home_state.room_occupancy.items():
-            room_name = self._translate_room_name(room)
-            if occupied:
-                # 查找停留时间
-                duration = 0
-                for device in home_state.devices:
-                    if (device.room == room and 
-                        hasattr(device, 'sensor_type') and 
-                        device.sensor_type == "motion" and
-                        hasattr(device, 'detection_duration')):
-                        duration = device.detection_duration
-                        break
+        # # 房间占用状态
+        # for room, occupied in home_state.room_occupancy.items():
+        #     room_name = self._translate_room_name(room)
+        #     if occupied:
+        #         # 查找停留时间
+        #         duration = 0
+        #         for device in home_state.devices:
+        #             if (device.room == room and 
+        #                 hasattr(device, 'sensor_type') and 
+        #                 device.sensor_type == "motion" and
+        #                 hasattr(device, 'detection_duration')):
+        #                 duration = device.detection_duration
+        #                 break
                 
-                if duration > 60:
-                    descriptions.append(f"{room_name}有人已停留{duration//60}分钟")
-                else:
-                    descriptions.append(f"{room_name}有人")
-            else:
-                descriptions.append(f"{room_name}无人")
+        #         if duration > 60:
+        #             descriptions.append(f"{room_name}有人已停留{duration//60}分钟")
+        #         else:
+        #             descriptions.append(f"{room_name}有人")
+        #     else:
+        #         descriptions.append(f"{room_name}无人")
         
-        # 设备状态
-        device_states = []
-        for device in home_state.devices:
-            if device.type == "light":
-                room_name = self._translate_room_name(device.room)
-                status = "开启" if device.status == "on" else "关闭"
-                device_states.append(f"{room_name}{device.name}{status}")
-            elif device.type == "air_conditioner" and device.status == "on":
-                room_name = self._translate_room_name(device.room)
-                temp = getattr(device, 'temperature', 26)
-                device_states.append(f"{room_name}空调开启，设定{temp}°C")
+        # # 设备状态
+        # device_states = []
+        # for device in home_state.devices:
+        #     if device.type == "light":
+        #         room_name = self._translate_room_name(device.room)
+        #         status = "开启" if device.status == "on" else "关闭"
+        #         device_states.append(f"{room_name}{device.name}{status}")
+        #     elif device.type == "air_conditioner" and device.status == "on":
+        #         room_name = self._translate_room_name(device.room)
+        #         temp = getattr(device, 'temperature', 26)
+        #         device_states.append(f"{room_name}空调开启，设定{temp}°C")
         
-        # 组合描述
-        state_desc = "；".join(descriptions)
-        if device_states:
-            state_desc += "。设备状态：" + "；".join(device_states)
+        # # 组合描述
+        # state_desc = "；".join(descriptions)
+        # if device_states:
+        #     state_desc += "。设备状态：" + "；".join(device_states)
         
-        return state_desc
+        # return state_desc
+        
+        return home_state.dict()
     
-    def _build_system_prompt_v2(self) -> str:
+    def _build_system_prompt(self) -> str:
         """构建优化的系统提示词"""
-        return """你是一个智能家居助手，负责分析家居状态并提供主动建议。
-
-你的职责：
-1. 分析当前家居设备状态和人员位置
-2. 识别可能的问题：能耗浪费、安全隐患、舒适度问题
-3. 以自然、友好的语气提供具体建议
-4. 建议要实用且容易执行
-
-回复要求：
-- 直接给出建议，不要多余的客套话
-- 使用"你"而不是"您"
-- 语气要自然亲切，像朋友一样
-- 一次只关注最重要的1-2个问题
-- 建议要具体明确
-
-示例风格：
-"你在卧室待了10分钟了，客厅的灯还开着，要不要关掉节省电费？"
-"厨房没人但灯还亮着，我帮你关掉吧？"
-"卧室温度有点高，要开空调吗？"
-"""
+        return SYSTEM_PROMPT
     
-    def _build_user_prompt_v2(self, state_description: str, analysis: Dict[str, Any]) -> str:
+    def _build_user_prompt(self, state_description: str) -> str:
         """构建优化的用户提示词"""
         prompt = f"当前家居状态：{state_description}\n\n"
-        
-        # 添加发现的问题
-        if analysis.get("device_issues"):
-            issues = []
-            for issue in analysis["device_issues"]:
-                if issue["type"] == "unused_light":
-                    room_name = self._translate_room_name(issue["room"])
-                    issues.append(f"{room_name}无人但灯开着")
-            
-            if issues:
-                prompt += f"发现的问题：{';'.join(issues)}\n\n"
-        
-        # 添加用户行为模式
-        if analysis.get("patterns"):
-            patterns = []
-            for pattern in analysis["patterns"]:
-                if pattern["type"] == "long_stay":
-                    room_name = self._translate_room_name(pattern["room"])
-                    duration_min = pattern["duration"] // 60
-                    patterns.append(f"在{room_name}停留{duration_min}分钟")
-            
-            if patterns:
-                prompt += f"用户行为：{';'.join(patterns)}\n\n"
-        
         prompt += "请分析这个状态，如果发现需要用户关注的问题，给出一个简洁友好的建议。如果一切正常，回复'当前状态良好'。"
         
         return prompt
     
-    def _parse_ai_response_v2(self, ai_response: str, analysis: Dict[str, Any]) -> AgentSuggestion:
+    def _parse_ai_response(self, ai_response: str) -> AgentSuggestion:
         """解析AI响应"""
-        # 如果AI认为一切正常，不生成建议
-        if "当前状态良好" in ai_response or "没有问题" in ai_response:
-            return None
-        
-        # 构建建议的操作
         actions = []
-        confidence = 0.9  # AI建议的置信度较高
-        
-        # 根据分析结果推断可能的操作
-        for issue in analysis.get("device_issues", []):
-            if issue["type"] == "unused_light":
-                actions.append({
-                    "type": "turn_off_lights",
-                    "room": issue["room"],
-                    "devices": issue["devices"]
-                })
-        
-        # 如果没有具体操作，降低置信度
-        if not actions:
-            confidence = 0.7
         
         return AgentSuggestion(
             id=str(uuid.uuid4()),
             content=ai_response,
-            confidence=confidence,
             suggested_actions=actions,
             reasoning="基于qwen模型的智能分析",
             timestamp=datetime.now()
@@ -357,16 +305,7 @@ class AgentService:
         
         # 处理用户回复
         response_content = await self._process_user_response(interaction.message)
-        actions_taken = []
-        
-        # 检查是否需要执行操作
-        if "是" in interaction.message or "好" in interaction.message or "帮我" in interaction.message:
-            # 执行建议的操作
-            actions_taken = await self._execute_suggested_actions()
-            if actions_taken:
-                response_content += " 已经帮你完成了！"
-        elif "不" in interaction.message or "不用" in interaction.message:
-            response_content = "好的，我记住了你的偏好。"
+        actions_taken = await self._parse_ai_response_v2(response_content)
         
         # 保存助手回复
         agent_message = AgentMessage(

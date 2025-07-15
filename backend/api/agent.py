@@ -26,7 +26,7 @@ async def interact_with_agent(
     agent: AgentService = Depends(get_agent_service),
     home_sim: HomeSimulator = Depends(get_home_simulator)
 ):
-    """与智能体交互（基于LLM）"""
+    """处理人对AI的回复"""
     try:
         # 处理用户交互
         response = await agent.handle_user_interaction(interaction)
