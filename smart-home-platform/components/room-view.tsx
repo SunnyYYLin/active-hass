@@ -91,17 +91,6 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
         })
     }
   }, [selectedRoom])
-=======
-  // 同步选中设备的状态
-  useEffect(() => {
-    if (selectedDevice) {
-      const updatedDevice = devices.find(d => d.id === selectedDevice.id)
-      if (updatedDevice && updatedDevice !== selectedDevice) {
-        setSelectedDevice(updatedDevice)
-      }
-    }
-  }, [devices, selectedDevice])
->>>>>>> 0d5ecf8009c097cf9677f8be776861bca2e3da97
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
