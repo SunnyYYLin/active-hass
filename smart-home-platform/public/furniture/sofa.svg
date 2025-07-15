@@ -1,0 +1,12 @@
+<svg width="100" height="40" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- 沙发主体 -->
+  <rect x="15" y="5" width="70" height="20" rx="8" fill="#8B5CF6" stroke="#6D28D9" stroke-width="2"/>
+  <!-- 靠背 -->
+  <rect x="10" y="20" width="80" height="12" rx="6" fill="#7C3AED" stroke="#5B21B6" stroke-width="2"/>
+  <!-- 扶手 -->
+  <rect x="8" y="8" width="8" height="22" rx="4" fill="#7C3AED" stroke="#5B21B6" stroke-width="2"/>
+  <rect x="84" y="8" width="8" height="22" rx="4" fill="#7C3AED" stroke="#5B21B6" stroke-width="2"/>
+  <!-- 脚 -->
+  <rect x="18" y="22" width="4" height="6" fill="#374151"/>
+  <rect x="78" y="22" width="4" height="6" fill="#374151"/>
+</svg>

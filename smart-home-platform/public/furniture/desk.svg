@@ -1,0 +1,11 @@
+<svg width="60" height="25" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg">
+  <!-- 桌面 -->
+  <rect x="5" y="8" width="50" height="12" rx="2" fill="#92400E" stroke="#78350F" stroke-width="2"/>
+  <!-- 抽屉 -->
+  <rect x="8" y="11" width="20" height="6" fill="#A16207" stroke="#78350F" stroke-width="1"/>
+  <!-- 把手 -->
+  <circle cx="26" cy="14" r="1" fill="#451A03"/>
+  <!-- 桌腿 -->
+  <rect x="8" y="18" width="3" height="5" fill="#451A03"/>
+  <rect x="49" y="18" width="3" height="5" fill="#451A03"/>
+</svg>
