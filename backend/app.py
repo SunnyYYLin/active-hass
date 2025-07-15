@@ -72,7 +72,6 @@ async def get_status():
     return {
         "status": "running",
         "devices_count": len(home_simulator.get_all_devices()),
-        "agent_active": agent_service.is_agent_active(),
         "timestamp": home_simulator.get_current_time().isoformat()
     }
 

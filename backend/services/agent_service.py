@@ -21,8 +21,47 @@ SYSTEM_PROMPT = """你是一个智能家居助手，负责分析家居状态并�
 3. 以自然、友好的语气提供具体建议
 4. 建议要实用且容易执行
 
+你有控制智能家居的能力，当你决定帮助用户执行某个操作时，使用以下格式：
+
+<action>
+{
+    "device_id": {
+        "status": "on" | "off",
+        "properties": {
+            "brightness": 80,
+            "temperature": 26,
+            "mode": "cool"
+        }
+    }
+}
+</action>
+
+可用设备ID：
+- light_bedroom: 卧室主灯
+- light_living: 客厅主灯  
+- light_kitchen: 厨房灯
+- ac_bedroom: 卧室空调
+
+操作示例：
+关闭客厅灯：
+<action>
+{"light_living": {"status": "off"}}
+</action>
+
+开启卧室空调并设置温度：
+<action>
+{"ac_bedroom": {"status": "on", "properties": {"temperature": 24, "mode": "cool"}}}
+</action>
+
+调节卧室灯亮度：
+<action>
+{"light_bedroom": {"status": "on", "properties": {"brightness": 60}}}
+</action>
+
+只有在明确需要执行操作时才使用<action>标签，否则只给出文字建议。
+
 回复要求：
-- 直接给出建议，不要多余的客套话
+- 直接给出建议或执行，不要多余的客套话
 - 使用"你"而不是"您"
 - 语气要自然亲切，像朋友一样
 - 一次只关注最重要的1-2个问题
@@ -32,6 +71,7 @@ SYSTEM_PROMPT = """你是一个智能家居助手，负责分析家居状态并�
 "你在卧室待了10分钟了，客厅的灯还开着，要不要关掉节省电费？"
 "厨房没人但灯还亮着，我帮你关掉吧？"
 "卧室温度有点高，要开空调吗？"
+"客厅灯已经关了<action>...</action>"
 """
 
 class AgentService:
@@ -116,20 +156,27 @@ class AgentService:
         # 分析状态并生成建议
         suggestion = await self._generate_suggestion(home_state)
         
-        # 保存建议为消息
-        message = AgentMessage(
-            id=str(uuid.uuid4()),
-            role=MessageRole.AGENT,
-            content=suggestion.content,
-            timestamp=datetime.now(),
-            metadata={
-                "suggestion_id": suggestion.id,
-                "reasoning": suggestion.reasoning
-            }
-        )
+        if suggestion:
+            # 如果建议包含操作，执行这些操作
+            if suggestion.suggested_actions:
+                print(f"🔧 执行建议操作: {suggestion.suggested_actions}")
+                action_results = await self._execute_suggested_actions(suggestion.suggested_actions)
             
-        await self._add_message(message)
-        self.last_suggestion_time = datetime.now()
+            # 保存建议为消息
+            message = AgentMessage(
+                id=str(uuid.uuid4()),
+                role=MessageRole.AGENT,
+                content=suggestion.content,
+                timestamp=datetime.now(),
+                metadata={
+                    "suggestion_id": suggestion.id,
+                    "reasoning": suggestion.reasoning,
+                    "suggested_actions": suggestion.suggested_actions,
+                }
+            )
+                
+            await self._add_message(message)
+            self.last_suggestion_time = datetime.now()
         
         return suggestion
     
@@ -288,12 +335,33 @@ class AgentService:
     
     def _parse_ai_response(self, ai_response: str) -> AgentSuggestion:
         """解析AI响应"""
-        actions = []
+        import re
+        import json
+        
+        # 解析AI响应中的操作指令，格式为：<action>{...}</action>
+        print(f"🔍 解析AI响应: {ai_response}")
+        action_pattern = re.compile(r'<action>(.*?)</action>', re.DOTALL)
+        matches = action_pattern.search(ai_response)
+        
+        suggested_actions = {}
+        if matches:
+            try:
+                # 尝试解析JSON格式的操作
+                action_json = matches.group(1).strip()
+                suggested_actions = json.loads(action_json)
+                print(f"🔧 解析到建议操作: {suggested_actions}")
+            except json.JSONDecodeError as e:
+                print(f"❌ 解析操作JSON失败: {e}")
+                print(f"原始内容: {matches.group(1)}")
+                suggested_actions = {}
+        
+        # 移除操作标签，只保留文本内容
+        clean_content = re.sub(r'<action>.*?</action>', '', ai_response, flags=re.DOTALL).strip()
         
         return AgentSuggestion(
             id=str(uuid.uuid4()),
-            content=ai_response,
-            suggested_actions=actions,
+            content=clean_content,
+            suggested_actions=suggested_actions,
             reasoning="基于qwen模型的智能分析",
             timestamp=datetime.now()
         )
@@ -323,7 +391,7 @@ class AgentService:
         
         # 处理用户回复
         response_content = await self._process_user_response(interaction.message)
-        actions_taken = []  # 暂时设为空列表，后续可以根据响应内容解析具体操作
+        actions_taken = []  # 用户交互暂时不执行自动操作
         
         # 保存助手回复
         agent_message = AgentMessage(
@@ -357,6 +425,28 @@ class AgentService:
             response = await self._call_llm_api(SYSTEM_PROMPT, user_prompt, with_history=True)
             
             if response:
+                # 解析响应中的操作
+                import re
+                import json
+                
+                action_pattern = re.compile(r'<action>(.*?)</action>', re.DOTALL)
+                matches = action_pattern.search(response)
+                
+                if matches:
+                    try:
+                        # 解析并执行操作
+                        action_json = matches.group(1).strip()
+                        actions = json.loads(action_json)
+                        print(f"🔧 用户交互中执行操作: {actions}")
+                        await self._execute_suggested_actions(actions)
+                        
+                        # 移除操作标签，只返回文本内容
+                        clean_response = re.sub(r'<action>.*?</action>', '', response, flags=re.DOTALL).strip()
+                        return clean_response if clean_response else "操作已完成。"
+                    except json.JSONDecodeError as e:
+                        print(f"❌ 解析用户交互操作JSON失败: {e}")
+                        return re.sub(r'<action>.*?</action>', '', response, flags=re.DOTALL).strip()
+                
                 return response
             else:
                 return "我明白了。有什么需要帮助的可以随时告诉我。"
@@ -365,25 +455,89 @@ class AgentService:
             print(f"❌ 处理用户响应失败: {e}")
             return "我明白了。有什么需要帮助的可以随时告诉我。"
     
-    async def _execute_suggested_actions(self) -> List[Dict[str, Any]]:
+    async def _execute_suggested_actions(self, actions: dict) -> List[Dict[str, Any]]:
         """执行建议的操作"""
-        # 这里需要与家居模拟器交互执行实际操作
-        # 暂时返回模拟的执行结果
-        actions_taken = []
+        results = []
         
-        # 查找最近的建议消息
-        for message in reversed(self.context.messages):
-            if (message.role == MessageRole.AGENT and 
-                "suggestion_id" in message.metadata):
-                # 模拟执行关灯操作
-                actions_taken.append({
-                    "type": "turn_off_lights",
-                    "status": "success",
-                    "message": "已关闭相关灯光"
-                })
-                break
+        if not actions:
+            return results
         
-        return actions_taken
+        try:
+            import httpx
+            import os
+            
+            # 获取后端服务地址 - 直接使用localhost:8000，因为这是内部调用
+            base_url = "http://localhost:8000"
+            
+            async with httpx.AsyncClient() as client:
+                for device_id, device_config in actions.items():
+                    try:
+                        # 准备更新数据
+                        update_data = {}
+                        
+                        # 设置设备状态
+                        if "status" in device_config:
+                            update_data["status"] = device_config["status"]
+                        
+                        # 设置设备属性
+                        if "properties" in device_config:
+                            update_data["properties"] = device_config["properties"]
+                        
+                        # 发送PUT请求更新设备
+                        response = await client.put(
+                            f"{base_url}/api/devices/{device_id}",
+                            json=update_data,
+                            headers={"Content-Type": "application/json"},
+                            timeout=10.0
+                        )
+                        
+                        if response.status_code == 200:
+                            response_data = response.json()
+                            if response_data.get("success"):
+                                results.append({
+                                    "device_id": device_id,
+                                    "success": True,
+                                    "message": response_data.get("message", "设备控制成功"),
+                                    "action": device_config
+                                })
+                                print(f"✅ 设备 {device_id} 控制成功")
+                            else:
+                                results.append({
+                                    "device_id": device_id,
+                                    "success": False,
+                                    "message": response_data.get("message", "设备控制失败"),
+                                    "action": device_config
+                                })
+                                print(f"❌ 设备 {device_id} 控制失败: {response_data.get('message')}")
+                        else:
+                            error_text = response.text
+                            results.append({
+                                "device_id": device_id,
+                                "success": False,
+                                "message": f"HTTP {response.status_code}: {error_text}",
+                                "action": device_config
+                            })
+                            print(f"❌ 设备 {device_id} API调用失败: HTTP {response.status_code}")
+                            
+                    except Exception as e:
+                        results.append({
+                            "device_id": device_id,
+                            "success": False,
+                            "message": f"执行失败: {str(e)}",
+                            "action": device_config
+                        })
+                        print(f"❌ 设备 {device_id} 执行异常: {e}")
+            
+            return results
+            
+        except Exception as e:
+            print(f"❌ 执行建议操作失败: {e}")
+            return [{
+                "success": False,
+                "message": f"执行失败: {str(e)}",
+                "actions": actions
+            }]
+        
     
     async def _add_message(self, message: AgentMessage):
         """添加消息到上下文"""
@@ -401,10 +555,6 @@ class AgentService:
     def get_context(self) -> AgentContext:
         """获取当前上下文"""
         return self.context
-    
-    def is_agent_active(self) -> bool:
-        """检查智能体是否活跃"""
-        return self.is_active
     
     async def get_conversation_history(self, limit: int = 20) -> List[AgentMessage]:
         """获取对话历史"""
