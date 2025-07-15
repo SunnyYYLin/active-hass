@@ -9,19 +9,11 @@ import { AIAssistant } from "@/components/ai-assistant"
 import { useDevices } from "@/hooks/use-devices"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { AIBubbleProvider } from "@/components/ai-bubble-context"
+import { ActiveViewProvider, useActiveView } from "@/components/active-view-context"
 
-export default function SmartHomePlatform() {
-  const [activeView, setActiveView] = useState("dashboard")
-  const { 
-    devices, 
-    loading, 
-    error, 
-    updateDevice, 
-    toggleDevice, 
-    getDevicesByRoom,
-    getDeviceStats,
-    setError 
-  } = useDevices()
+function SmartHomePlatformContent({ devices, loading, error, updateDevice, toggleDevice, getDevicesByRoom, getDeviceStats, setError }: any) {
+  const { activeView, setActiveView } = useActiveView()
 
   const renderContent = () => {
     if (loading) {
@@ -73,5 +65,34 @@ export default function SmartHomePlatform() {
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
       <main className="flex-1 overflow-hidden">{renderContent()}</main>
     </div>
+  )
+}
+
+export default function SmartHomePlatform() {
+  const {
+    devices,
+    loading,
+    error,
+    updateDevice,
+    toggleDevice,
+    getDevicesByRoom,
+    getDeviceStats,
+    setError
+  } = useDevices()
+  return (
+    <ActiveViewProvider>
+      <AIBubbleProvider>
+        <SmartHomePlatformContent
+          devices={devices}
+          loading={loading}
+          error={error}
+          updateDevice={updateDevice}
+          toggleDevice={toggleDevice}
+          getDevicesByRoom={getDevicesByRoom}
+          getDeviceStats={getDeviceStats}
+          setError={setError}
+        />
+      </AIBubbleProvider>
+    </ActiveViewProvider>
   )
 }

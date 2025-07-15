@@ -40,8 +40,12 @@ export function AIAssistant() {
   }
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    // 延迟一小段时间再滚动，确保DOM渲染完成
+    const timer = setTimeout(() => {
+      scrollToBottom()
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages, loading])
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || loading) return

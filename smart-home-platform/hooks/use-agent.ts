@@ -38,6 +38,7 @@ export function useAgent() {
 
       const interaction: UserInteraction = { message, context };
       const response = await apiService.interactWithAgent(interaction);
+      console.log(response)
 
       // 添加AI响应
       const agentMessage: AgentMessage = {
@@ -153,10 +154,10 @@ export function useAgent() {
 
   // 初始化
   useEffect(() => {
-    // 加载初始状态和欢迎消息
-    resetContext();
+    // 加载初始状态和历史记录
+    loadConversationHistory();
     getAgentStatus();
-  }, []);
+  }, [loadConversationHistory, getAgentStatus]);
 
   return {
     messages,

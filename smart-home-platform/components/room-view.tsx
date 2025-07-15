@@ -10,6 +10,8 @@ import { Lightbulb, Wind, Tv, Blinds, DoorOpen, Camera, ToggleLeft, Activity, Ar
 import { Device, DeviceUpdateRequest } from "@/lib/api"
 import { RoomLayout } from "./room-layout"
 import { FloorPlan } from "./floor-plan"
+import { useToast } from "@/hooks/use-toast"
+import { useAIBubble } from "@/components/ai-bubble-context"
 
 interface RoomViewProps {
   devices: Device[]
@@ -21,6 +23,8 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null)
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null) // null表示全局视图
   const [updating, setUpdating] = useState<string | null>(null)
+  const { toast } = useToast() // 用于弹出AI助手气泡
+  const { setShowAIBubble, setContent } = useAIBubble()
 
   // 人体传感器自动控制
   useEffect(() => {
@@ -56,6 +60,36 @@ export function RoomView({ devices, updateDevice, toggleDevice }: RoomViewProps)
 
     controlMotionSensors()
   }, [selectedRoom, devices, toggleDevice])
+
+  // 切换房间时调用AI分析接口并弹出气泡
+  useEffect(() => {
+    if (selectedRoom) {
+      fetch("http://localhost:8000/api/agent/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: selectedRoom }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("AI分析返回：", data)
+          setContent(data.suggestion?.content || data.current_state?.summary || "AI分析完成")
+          setShowAIBubble(true)
+          toast({
+            title: "AI助手感知",
+            description: data.suggestion?.content || data.current_state?.summary || "AI分析完成",
+            duration: 5000,
+          })
+        })
+        .catch(e => {
+          console.error("AI分析接口请求失败：", e)
+          toast({
+            title: "AI助手感知",
+            description: "AI分析失败",
+            duration: 3000,
+          })
+        })
+    }
+  }, [selectedRoom])
 
   const getDeviceIcon = (type: string) => {
     switch (type) {

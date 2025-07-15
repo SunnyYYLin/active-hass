@@ -2,6 +2,7 @@
 
 import { Home, Zap, Map, Settings, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAIBubble } from "@/components/ai-bubble-context"
 
 interface SidebarProps {
   activeView: string
@@ -15,6 +16,8 @@ export function Sidebar({ activeView, setActiveView }: SidebarProps) {
     { id: "automation", label: "自动化", icon: Settings },
     { id: "assistant", label: "AI助手", icon: MessageCircle },
   ]
+
+  const { showAIBubble, setShowAIBubble } = useAIBubble()
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -33,11 +36,19 @@ export function Sidebar({ activeView, setActiveView }: SidebarProps) {
               <Button
                 key={item.id}
                 variant={activeView === item.id ? "default" : "ghost"}
-                className="w-full justify-start gap-3"
-                onClick={() => setActiveView(item.id)}
+                className="w-full justify-start gap-3 relative"
+                onClick={() => {
+                  setActiveView(item.id)
+                  if (item.id === "assistant") setShowAIBubble(false)
+                }}
               >
                 <Icon className="w-5 h-5" />
                 {item.label}
+                {item.id === "assistant" && showAIBubble && (
+                  <span className="absolute right-3 top-2 bg-blue-500 text-white text-xs rounded px-2 py-0.5 shadow z-10">
+                    AI智能分析
+                  </span>
+                )}
               </Button>
             )
           })}
