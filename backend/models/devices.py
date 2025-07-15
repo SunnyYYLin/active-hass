@@ -41,10 +41,14 @@ class Device(BaseModel):
     type: DeviceType
     room: Room
     status: DeviceStatus
-    properties: Dict[str, Any] = {}
     last_updated: datetime
     created_at: datetime
-
+    
+    @property
+    def properties(self) -> Dict[str, Any]:
+        """设备属性"""
+        return self.dict(exclude={"id", "name", "type", "room", "status", "last_updated", "created_at"})
+    
 class SensorDevice(Device):
     """传感器设备模型"""
     sensor_type: SensorType
@@ -73,6 +77,7 @@ class DeviceResponse(BaseModel):
     success: bool
     message: str
     device: Optional[Device] = None
+    properties: Optional[Dict[str, Any]] = None  # 更新后的属性
 
 class HomeState(BaseModel):
     """家居状态模型"""

@@ -25,8 +25,7 @@ app = FastAPI(
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=os.getenv("CORS_ORIGINS", "").split(","),
-    allow_origins=["*"],  # 允许所有来源，实际使用中请根据需求配置
+    allow_origins=["*"],  # 允许所有来源，生产环境请根据需求配置
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,16 +67,31 @@ async def root():
 
 @app.get("/api/status")
 async def get_status():
-    """获取系统状态"""
-    return {
-        "status": "running",
-        "devices_count": len(home_simulator.get_all_devices()),
-        "timestamp": home_simulator.get_current_time().isoformat()
-    }
+    """获取系统状态
+    
+    Returns:
+        dict: 系统运行状态信息
+    """
+    try:
+        return {
+            "status": "running",
+            "devices_count": len(home_simulator.get_all_devices()),
+            "agent_active": agent_service.is_active,
+            "llm_available": agent_service.llm_client is not None,
+            "timestamp": home_simulator.get_current_time().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": "N/A"
+        }
 
 # 全局异常处理
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
+    """全局异常处理器"""
+    print(f"全局异常: {exc}")  # 记录异常日志
     return JSONResponse(
         status_code=500,
         content={"detail": f"内部服务器错误: {str(exc)}"}

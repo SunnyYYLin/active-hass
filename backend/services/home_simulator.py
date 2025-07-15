@@ -199,7 +199,8 @@ class HomeSimulator:
     
     def get_device(self, device_id: str) -> Device:
         """获取设备"""
-        return self.devices.get(device_id)
+        device = self.devices.get(device_id)
+        return device if device else None
     
     def get_all_devices(self) -> List[Device]:
         """获取所有设备"""
