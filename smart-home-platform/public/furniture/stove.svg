@@ -1,0 +1,13 @@
+<svg width="40" height="25" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg">
+  <!-- 灶台主体 -->
+  <rect x="5" y="12" width="30" height="10" rx="2" fill="#EF4444" stroke="#DC2626" stroke-width="2"/>
+  <!-- 炉眼 -->
+  <circle cx="13" cy="17" r="3" fill="#7F1D1D" stroke="#991B1B" stroke-width="1"/>
+  <circle cx="27" cy="17" r="3" fill="#7F1D1D" stroke="#991B1B" stroke-width="1"/>
+  <!-- 控制旋钮 -->
+  <rect x="8" y="8" width="4" height="4" rx="2" fill="#374151"/>
+  <rect x="28" y="8" width="4" height="4" rx="2" fill="#374151"/>
+  <!-- 火焰效果 -->
+  <path d="M 13 14 Q 11 12 13 10 Q 15 12 13 14" fill="#F59E0B" opacity="0.7"/>
+  <path d="M 27 14 Q 25 12 27 10 Q 29 12 27 14" fill="#F59E0B" opacity="0.7"/>
+</svg>

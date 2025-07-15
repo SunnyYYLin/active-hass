@@ -1,0 +1,9 @@
+<svg width="50" height="8" viewBox="0 0 50 8" xmlns="http://www.w3.org/2000/svg">
+  <!-- 窗框 -->
+  <rect x="2" y="1" width="46" height="6" rx="1" fill="#60A5FA" stroke="#2563EB" stroke-width="2"/>
+  <!-- 玻璃 -->
+  <rect x="4" y="2" width="42" height="4" fill="#93C5FD" opacity="0.6"/>
+  <!-- 窗格 -->
+  <line x1="25" y1="2" x2="25" y2="6" stroke="#2563EB" stroke-width="1"/>
+  <line x1="6" y1="4" x2="44" y2="4" stroke="#2563EB" stroke-width="1"/>
+</svg>
