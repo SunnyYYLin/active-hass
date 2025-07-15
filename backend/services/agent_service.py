@@ -250,7 +250,7 @@ class AgentService:
                 extra_params = {}
                 if "qwen" in self.config.model.lower():
                     extra_params["stream"] = False
-                    extra_params["extra_body"] = {"enable_thinking": False}
+                    # extra_params["extra_body"] = {"enable_thinking": False}
                 
                 return self.llm_client.chat.completions.create(
                     model=self.config.model,

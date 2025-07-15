@@ -120,7 +120,7 @@ async def get_devices_by_room(room: Room, home_sim: HomeSimulator = Depends(get_
         raise HTTPException(status_code=500, detail=f"获取房间设备失败: {str(e)}")
 
 
-@router.get("/{device_id}", response_model=Device)
+@router.get("/{device_id}", response_model=DeviceResponse)
 async def get_device(device_id: str, home_sim: HomeSimulator = Depends(get_home_simulator)):
     """获取单个设备
     
@@ -133,7 +133,12 @@ async def get_device(device_id: str, home_sim: HomeSimulator = Depends(get_home_
     device = home_sim.get_device(device_id)
     if not device:
         raise HTTPException(status_code=404, detail="设备不存在")
-    return device
+    return DeviceResponse(
+        success=True,
+        message="设备信息获取成功",
+        device=device,
+        properties=device.properties
+    )
 
 async def _update_device_helper(
     device_id: str, 
