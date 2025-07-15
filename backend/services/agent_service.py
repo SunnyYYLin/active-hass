@@ -276,8 +276,14 @@ class AgentService:
             return None    
         
     def _build_detailed_state_description(self, home_state: HomeState) -> str:
-        """构建详细的状态描述"""
-        # TODO
+        """构建详细的状态描述
+        
+        Args:
+            home_state: 家居状态对象
+            
+        Returns:
+            str: 详细的状态描述字符串
+        """
         descriptions = []
         
         # 房间占用状态
