@@ -6,34 +6,65 @@ import { DevicePanel } from "@/components/device-panel"
 import { RoomView } from "@/components/room-view"
 import { AutomationPanel } from "@/components/automation-panel"
 import { AIAssistant } from "@/components/ai-assistant"
+import { useDevices } from "@/hooks/use-devices"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export default function SmartHomePlatform() {
   const [activeView, setActiveView] = useState("dashboard")
-  const [devices, setDevices] = useState([
-    { id: "light1", name: "客厅主灯", type: "light", status: "on", brightness: 80, room: "living", x: 30, y: 25 },
-    { id: "light2", name: "卧室台灯", type: "light", status: "off", brightness: 0, room: "bedroom", x: 75, y: 30 },
-    { id: "ac1", name: "客厅空调", type: "ac", status: "on", temperature: 24, room: "living", x: 20, y: 15 },
-    { id: "tv1", name: "客厅电视", type: "tv", status: "off", channel: 1, room: "living", x: 50, y: 40 },
-    { id: "curtain1", name: "客厅窗帘", type: "curtain", status: "closed", openness: 20, room: "living", x: 15, y: 35 },
-    { id: "door1", name: "前门", type: "door", status: "locked", room: "entrance", x: 85, y: 60 },
-  ])
-
-  const updateDevice = (deviceId: string, updates: any) => {
-    setDevices((prev) => prev.map((device) => (device.id === deviceId ? { ...device, ...updates } : device)))
-  }
+  const { 
+    devices, 
+    loading, 
+    error, 
+    updateDevice, 
+    toggleDevice, 
+    getDevicesByRoom,
+    getDeviceStats,
+    setError 
+  } = useDevices()
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-gray-600">加载设备中...</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="p-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+              <button 
+                onClick={() => setError(null)} 
+                className="ml-2 text-blue-600 underline"
+              >
+                重试
+              </button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )
+    }
+
     switch (activeView) {
       case "dashboard":
-        return <DevicePanel devices={devices} updateDevice={updateDevice} />
+        return <DevicePanel devices={devices} updateDevice={updateDevice} toggleDevice={toggleDevice} />
       case "room":
-        return <RoomView devices={devices} updateDevice={updateDevice} />
+        return <RoomView devices={devices} updateDevice={updateDevice} toggleDevice={toggleDevice} />
       case "automation":
         return <AutomationPanel devices={devices} />
       case "assistant":
-        return <AIAssistant devices={devices} updateDevice={updateDevice} />
+        return <AIAssistant />
       default:
-        return <DevicePanel devices={devices} updateDevice={updateDevice} />
+        return <DevicePanel devices={devices} updateDevice={updateDevice} toggleDevice={toggleDevice} />
     }
   }
 
