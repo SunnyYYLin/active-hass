@@ -109,7 +109,7 @@ def main():
     import subprocess
     try:
         result = subprocess.run(
-            ["curl", "-s", "http://localhost:8000/api/devices/", "-o", "/dev/null", "-w", "%{http_code}"],
+            ["curl", "-s", f"http://localhost:{os.getenv('PORT', 8000)}/api/devices/", "-o", "/dev/null", "-w", "%{http_code}"],
             capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0 and result.stdout.strip() == "200":
