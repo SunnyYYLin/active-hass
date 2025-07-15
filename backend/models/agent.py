@@ -28,7 +28,7 @@ class AgentSuggestion(BaseModel):
     """智能体建议模型"""
     id: str
     content: str
-    suggested_actions: List[Dict[str, Any]] = []  # 建议的操作
+    suggested_actions: Dict[str, Any] = []  # 建议的操作
     reasoning: str  # 推理过程
     timestamp: datetime
 

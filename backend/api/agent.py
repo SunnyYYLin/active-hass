@@ -127,7 +127,6 @@ async def get_agent_status(agent: AgentService = Depends(get_agent_service)):
     try:
         context = agent.get_context()
         return {
-            "active": agent.is_agent_active(),
             "llm_available": agent.llm_client is not None,
             "model": agent.config.model if agent.llm_client else None,
             "last_interaction": context.last_interaction,
